@@ -20,7 +20,6 @@ import com.zhuinden.monarchy.Monarchy
 import org.matrix.android.sdk.api.MatrixPatterns.getDomain
 import org.matrix.android.sdk.api.auth.data.HomeServerConnectionConfig
 import org.matrix.android.sdk.api.auth.wellknown.WellknownResult
-import org.matrix.android.sdk.api.extensions.orTrue
 import org.matrix.android.sdk.api.session.homeserver.HomeServerCapabilities
 import org.matrix.android.sdk.internal.auth.version.Versions
 import org.matrix.android.sdk.internal.auth.version.isLoginAndRegistrationSupportedBySdk
@@ -109,16 +108,9 @@ internal class DefaultGetHomeServerCapabilitiesTask @Inject constructor(
             val homeServerCapabilitiesEntity = HomeServerCapabilitiesEntity.getOrCreate(realm)
 
             if (getCapabilitiesResult != null) {
-                val capabilities = getCapabilitiesResult.capabilities
+                homeServerCapabilitiesEntity.canChangePassword = getCapabilitiesResult.canChangePassword()
 
-                // The spec says: If not present, the client should assume that
-                // password, display name, avatar changes and 3pid changes are possible via the API
-                homeServerCapabilitiesEntity.canChangePassword = capabilities?.changePassword?.enabled.orTrue()
-                homeServerCapabilitiesEntity.canChangeDisplayName = capabilities?.changeDisplayName?.enabled.orTrue()
-                homeServerCapabilitiesEntity.canChangeAvatar = capabilities?.changeAvatar?.enabled.orTrue()
-                homeServerCapabilitiesEntity.canChange3pid = capabilities?.change3pid?.enabled.orTrue()
-
-                homeServerCapabilitiesEntity.roomVersionsJson = capabilities?.roomVersions?.let {
+                homeServerCapabilitiesEntity.roomVersionsJson = getCapabilitiesResult.capabilities?.roomVersions?.let {
                     MoshiProvider.providesMoshi().adapter(RoomVersions::class.java).toJson(it)
                 }
             }

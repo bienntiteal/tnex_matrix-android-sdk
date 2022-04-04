@@ -323,13 +323,13 @@ internal class DefaultFileService @Inject constructor(
         return FileProvider.getUriForFile(context, authority, targetFile)
     }
 
-    override fun getCacheSize(): Long {
+    override fun getCacheSize(): Int {
         return downloadFolder.walkTopDown()
                 .onEnter {
                     Timber.v("Get size of ${it.absolutePath}")
                     true
                 }
-                .sumOf { it.length() }
+                .sumOf { it.length().toInt() }
     }
 
     override fun clearCache() {

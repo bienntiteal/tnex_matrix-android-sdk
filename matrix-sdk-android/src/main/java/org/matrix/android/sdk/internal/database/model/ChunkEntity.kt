@@ -52,9 +52,6 @@ internal fun ChunkEntity.deleteOnCascade(deleteStateEvents: Boolean, canDeleteRo
     if (deleteStateEvents) {
         stateEvents.deleteAllFromRealm()
     }
-    timelineEvents.clearWith {
-        val deleteRoot = canDeleteRoot && (it.root?.stateKey == null || deleteStateEvents)
-        it.deleteOnCascade(deleteRoot)
-    }
+    timelineEvents.clearWith { it.deleteOnCascade(canDeleteRoot) }
     deleteFromRealm()
 }

@@ -27,11 +27,7 @@ import org.matrix.android.sdk.api.listeners.ProgressListener
 import org.matrix.android.sdk.api.session.content.ContentAttachmentData
 import org.matrix.android.sdk.api.session.events.model.toContent
 import org.matrix.android.sdk.api.session.events.model.toModel
-import org.matrix.android.sdk.api.session.room.model.message.MessageAudioContent
-import org.matrix.android.sdk.api.session.room.model.message.MessageContent
-import org.matrix.android.sdk.api.session.room.model.message.MessageFileContent
-import org.matrix.android.sdk.api.session.room.model.message.MessageImageContent
-import org.matrix.android.sdk.api.session.room.model.message.MessageVideoContent
+import org.matrix.android.sdk.api.session.room.model.message.*
 import org.matrix.android.sdk.api.util.MimeTypes
 import org.matrix.android.sdk.internal.SessionManager
 import org.matrix.android.sdk.internal.crypto.attachments.MXEncryptedAttachments
@@ -253,6 +249,7 @@ internal class UploadContentWorker(val context: Context, params: WorkerParameter
                             file = encryptedFile,
                             filename = null,
                             mimeType = MimeTypes.OctetStream,
+                            key=attachment.keyUpload(),
                             progressListener = progressListener
                     )
                 } else {
@@ -262,6 +259,7 @@ internal class UploadContentWorker(val context: Context, params: WorkerParameter
                             file = fileToUpload,
                             filename = attachment.name,
                             mimeType = attachment.getSafeMimeType(),
+                            key=attachment.keyUpload(),
                             progressListener = progressListener
                     )
                 }
@@ -334,6 +332,7 @@ internal class UploadContentWorker(val context: Context, params: WorkerParameter
                                     byteArray = encryptionResult.encryptedByteArray,
                                     filename = null,
                                     mimeType = MimeTypes.OctetStream,
+                                    key = MessageType.MSGTYPE_IMAGE,
                                     progressListener = thumbnailProgressListener
                             )
                             UploadThumbnailResult(
@@ -345,6 +344,7 @@ internal class UploadContentWorker(val context: Context, params: WorkerParameter
                                     byteArray = thumbnailData.bytes,
                                     filename = "thumb_${params.attachment.name}",
                                     mimeType = thumbnailData.mimeType,
+                                    key = MessageType.MSGTYPE_IMAGE,
                                     progressListener = thumbnailProgressListener
                             )
                             UploadThumbnailResult(

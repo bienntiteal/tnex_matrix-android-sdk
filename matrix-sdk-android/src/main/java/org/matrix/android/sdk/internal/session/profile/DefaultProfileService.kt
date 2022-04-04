@@ -26,6 +26,7 @@ import org.matrix.android.sdk.api.MatrixCoroutineDispatchers
 import org.matrix.android.sdk.api.auth.UserInteractiveAuthInterceptor
 import org.matrix.android.sdk.api.session.identity.ThreePid
 import org.matrix.android.sdk.api.session.profile.ProfileService
+import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.util.JsonDict
 import org.matrix.android.sdk.api.util.MimeTypes
 import org.matrix.android.sdk.api.util.Optional
@@ -68,9 +69,11 @@ internal class DefaultProfileService @Inject constructor(private val taskExecuto
     }
 
     override suspend fun updateAvatar(userId: String, newAvatarUri: Uri, fileName: String) {
-        val response = fileUploader.uploadFromUri(newAvatarUri, fileName, MimeTypes.Jpeg)
-        setAvatarUrlTask.execute(SetAvatarUrlTask.Params(userId = userId, newAvatarUrl = response.contentUri))
-        userStore.updateAvatar(userId, response.contentUri)
+        withContext(coroutineDispatchers.io) {
+            val response = fileUploader.uploadFromUri(newAvatarUri, fileName, MimeTypes.Jpeg, MessageType.MSGTYPE_IMAGE)
+            setAvatarUrlTask.execute(SetAvatarUrlTask.Params(userId = userId, newAvatarUrl = response.contentUri))
+            userStore.updateAvatar(userId, response.contentUri)
+        }
     }
 
     override suspend fun getAvatarUrl(userId: String): Optional<String> {

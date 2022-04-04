@@ -60,7 +60,6 @@ internal abstract class IdentityModule {
         @IdentityDatabase
         @SessionScope
         fun providesIdentityRealmConfiguration(realmKeysUtils: RealmKeysUtils,
-                                               realmIdentityStoreMigration: RealmIdentityStoreMigration,
                                                @SessionFilesDirectory directory: File,
                                                @UserMd5 userMd5: String): RealmConfiguration {
             return RealmConfiguration.Builder()
@@ -69,8 +68,8 @@ internal abstract class IdentityModule {
                     .apply {
                         realmKeysUtils.configureEncryption(this, SessionModule.getKeyAlias(userMd5))
                     }
-                    .schemaVersion(realmIdentityStoreMigration.schemaVersion)
-                    .migration(realmIdentityStoreMigration)
+                    .schemaVersion(RealmIdentityStoreMigration.IDENTITY_STORE_SCHEMA_VERSION)
+                    .migration(RealmIdentityStoreMigration)
                     .allowWritesOnUiThread(true)
                     .modules(IdentityRealmModule())
                     .build()

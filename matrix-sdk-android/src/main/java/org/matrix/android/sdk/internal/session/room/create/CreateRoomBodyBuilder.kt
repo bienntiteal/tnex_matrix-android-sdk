@@ -22,6 +22,7 @@ import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.identity.IdentityServiceError
 import org.matrix.android.sdk.api.session.identity.toMedium
 import org.matrix.android.sdk.api.session.room.model.create.CreateRoomParams
+import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.util.MimeTypes
 import org.matrix.android.sdk.internal.crypto.DeviceListManager
 import org.matrix.android.sdk.internal.crypto.MXCRYPTO_ALGORITHM_MEGOLM
@@ -112,18 +113,21 @@ internal class CreateRoomBodyBuilder @Inject constructor(
     private suspend fun buildAvatarEvent(params: CreateRoomParams): Event? {
         return params.avatarUri?.let { avatarUri ->
             // First upload the image, ignoring any error
-            tryOrNull("Failed to upload image") {
+            tryOrNull {
                 fileUploader.uploadFromUri(
                         uri = avatarUri,
                         filename = UUID.randomUUID().toString(),
-                        mimeType = MimeTypes.Jpeg)
+                        mimeType = MimeTypes.Jpeg,
+                        key = MessageType.MSGTYPE_IMAGE
+                )
             }
-        }?.let { response ->
-            Event(
-                    type = EventType.STATE_ROOM_AVATAR,
-                    stateKey = "",
-                    content = mapOf("url" to response.contentUri)
-            )
+                    ?.let { response ->
+                        Event(
+                                type = EventType.STATE_ROOM_AVATAR,
+                                stateKey = "",
+                                content = mapOf("url" to response.contentUri)
+                        )
+                    }
         }
     }
 
@@ -179,19 +183,19 @@ internal class CreateRoomBodyBuilder @Inject constructor(
                 params.invite3pids.isEmpty() &&
                 params.invitedUserIds.isNotEmpty() &&
                 params.invitedUserIds.let { userIds ->
-                    val keys = deviceListManager.downloadKeys(userIds, forceDownload = false)
+            val keys = deviceListManager.downloadKeys(userIds, forceDownload = false)
 
-                    userIds.all { userId ->
-                        keys.map[userId].let { deviceMap ->
-                            if (deviceMap.isNullOrEmpty()) {
-                                // A user has no device, so do not enable encryption
-                                false
-                            } else {
-                                // Check that every user's device have at least one key
-                                deviceMap.values.all { !it.keys.isNullOrEmpty() }
-                            }
-                        }
+            userIds.all { userId ->
+                keys.map[userId].let { deviceMap ->
+                    if (deviceMap.isNullOrEmpty()) {
+                        // A user has no device, so do not enable encryption
+                        false
+                    } else {
+                        // Check that every user's device have at least one key
+                        deviceMap.values.all { !it.keys.isNullOrEmpty() }
                     }
                 }
+            }
+        }
     }
 }

@@ -152,7 +152,7 @@ abstract class SyncService : Service() {
 
     private suspend fun doSync() {
         Timber.v("## Sync: Execute sync request with timeout $syncTimeoutSeconds seconds")
-        val params = SyncTask.Params(syncTimeoutSeconds * 1000L, SyncPresence.Offline, afterPause = false)
+        val params = SyncTask.Params(syncTimeoutSeconds * 1000L, SyncPresence.Offline)
         try {
             // never do that in foreground, let the syncThread work
             syncTask.execute(params)
@@ -192,14 +192,12 @@ abstract class SyncService : Service() {
         }
     }
 
-    abstract fun provideMatrix(): Matrix
-
     private fun initialize(intent: Intent?): Boolean {
         if (intent == null) {
             Timber.d("## Sync: initialize intent is null")
             return false
         }
-        val matrix = provideMatrix()
+        val matrix = Matrix.getInstance(applicationContext)
         val safeSessionId = intent.getStringExtra(EXTRA_SESSION_ID) ?: return false
         syncTimeoutSeconds = intent.getIntExtra(EXTRA_TIMEOUT_SECONDS, getDefaultSyncTimeoutSeconds())
         syncDelaySeconds = intent.getIntExtra(EXTRA_DELAY_SECONDS, getDefaultSyncDelaySeconds())

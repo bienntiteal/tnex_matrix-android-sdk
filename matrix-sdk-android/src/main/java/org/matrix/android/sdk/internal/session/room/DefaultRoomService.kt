@@ -46,7 +46,6 @@ import org.matrix.android.sdk.internal.session.room.create.CreateRoomTask
 import org.matrix.android.sdk.internal.session.room.membership.RoomChangeMembershipStateDataSource
 import org.matrix.android.sdk.internal.session.room.membership.RoomMemberHelper
 import org.matrix.android.sdk.internal.session.room.membership.joining.JoinRoomTask
-import org.matrix.android.sdk.internal.session.room.membership.leaving.LeaveRoomTask
 import org.matrix.android.sdk.internal.session.room.peeking.PeekRoomTask
 import org.matrix.android.sdk.internal.session.room.peeking.ResolveRoomStateTask
 import org.matrix.android.sdk.internal.session.room.read.MarkAllRoomsReadTask
@@ -67,8 +66,7 @@ internal class DefaultRoomService @Inject constructor(
         private val peekRoomTask: PeekRoomTask,
         private val roomGetter: RoomGetter,
         private val roomSummaryDataSource: RoomSummaryDataSource,
-        private val roomChangeMembershipStateDataSource: RoomChangeMembershipStateDataSource,
-        private val leaveRoomTask: LeaveRoomTask,
+        private val roomChangeMembershipStateDataSource: RoomChangeMembershipStateDataSource
 ) : RoomService {
 
     override suspend fun createRoom(createRoomParams: CreateRoomParams): String {
@@ -133,10 +131,6 @@ internal class DefaultRoomService @Inject constructor(
                                   reason: String?,
                                   thirdPartySigned: SignInvitationResult) {
         joinRoomTask.execute(JoinRoomTask.Params(roomId, reason, thirdPartySigned = thirdPartySigned))
-    }
-
-    override suspend fun leaveRoom(roomId: String, reason: String?) {
-        leaveRoomTask.execute(LeaveRoomTask.Params(roomId, reason))
     }
 
     override suspend fun markAllAsRead(roomIds: List<String>) {

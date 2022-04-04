@@ -35,8 +35,6 @@ internal class CryptoSessionInfoProvider @Inject constructor(
 ) {
 
     fun isRoomEncrypted(roomId: String): Boolean {
-        // We look at the presence at any m.room.encryption state event no matter if it's
-        // the latest one or if it is well formed
         val encryptionEvent = monarchy.fetchCopied { realm ->
             EventEntity.whereType(realm, roomId = roomId, type = EventType.STATE_ROOM_ENCRYPTION)
                     .isEmpty(EventEntityFields.STATE_KEY)

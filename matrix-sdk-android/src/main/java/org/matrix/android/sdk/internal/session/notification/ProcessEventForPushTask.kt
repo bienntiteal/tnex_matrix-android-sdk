@@ -74,7 +74,6 @@ internal class DefaultProcessEventForPushTask @Inject constructor(
                 event to it
             }
         }
-        Timber.d("[PushRules] matched ${matchedEvents.size} out of ${allEvents.size}")
 
         val allRedactedEvents = params.syncResponse.join
                 .asSequence()

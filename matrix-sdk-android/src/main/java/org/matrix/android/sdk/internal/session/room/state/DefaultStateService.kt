@@ -31,6 +31,7 @@ import org.matrix.android.sdk.api.session.room.model.RoomHistoryVisibility
 import org.matrix.android.sdk.api.session.room.model.RoomJoinRules
 import org.matrix.android.sdk.api.session.room.model.RoomJoinRulesAllowEntry
 import org.matrix.android.sdk.api.session.room.model.RoomJoinRulesContent
+import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.session.room.state.StateService
 import org.matrix.android.sdk.api.util.JsonDict
 import org.matrix.android.sdk.api.util.MimeTypes
@@ -155,7 +156,7 @@ internal class DefaultStateService @AssistedInject constructor(@Assisted private
     }
 
     override suspend fun updateAvatar(avatarUri: Uri, fileName: String) {
-        val response = fileUploader.uploadFromUri(avatarUri, fileName, MimeTypes.Jpeg)
+        val response = fileUploader.uploadFromUri(avatarUri, fileName, MimeTypes.Jpeg, MessageType.MSGTYPE_IMAGE)
         sendStateEvent(
                 eventType = EventType.STATE_ROOM_AVATAR,
                 body = mapOf("url" to response.contentUri),

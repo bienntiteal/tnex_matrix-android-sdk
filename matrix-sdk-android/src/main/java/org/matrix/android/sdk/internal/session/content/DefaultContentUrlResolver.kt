@@ -23,9 +23,13 @@ import org.matrix.android.sdk.api.session.content.ContentUrlResolver
 import org.matrix.android.sdk.api.session.contentscanner.ContentScannerService
 import org.matrix.android.sdk.internal.crypto.attachments.ElementToDecrypt
 import org.matrix.android.sdk.internal.network.NetworkConstants
+import org.matrix.android.sdk.internal.network.NetworkConstants.URI_API_MEDIA_PREFIX_PATH_R0
 import org.matrix.android.sdk.internal.session.contentscanner.ScanEncryptorUtils
 import org.matrix.android.sdk.internal.session.contentscanner.model.toJson
 import org.matrix.android.sdk.internal.util.ensureTrailingSlash
+import org.matrix.android.sdk.internal.util.md5
+import java.io.File
+import java.util.Arrays
 import javax.inject.Inject
 
 internal class DefaultContentUrlResolver @Inject constructor(
@@ -35,7 +39,8 @@ internal class DefaultContentUrlResolver @Inject constructor(
 
     private val baseUrl = homeServerConnectionConfig.homeServerUriBase.toString().ensureTrailingSlash()
 
-    override val uploadUrl = baseUrl + NetworkConstants.URI_API_MEDIA_PREFIX_PATH_R0 + "upload"
+    override val uploadUrl = baseUrl + URI_API_MEDIA_PREFIX_PATH_R0
+
 
     override fun resolveForDownload(contentUrl: String?, elementToDecrypt: ElementToDecrypt?): ContentUrlResolver.ResolvedMethod? {
         return if (scannerService.isScannerEnabled() && elementToDecrypt != null) {
@@ -51,14 +56,26 @@ internal class DefaultContentUrlResolver @Inject constructor(
                             .toJson()
             )
         } else {
-            resolveFullSize(contentUrl)?.let { ContentUrlResolver.ResolvedMethod.GET(it) }
+            resolveFullSize(contentUrl)?.let {
+                ContentUrlResolver.ResolvedMethod.GET(it)
+            }
         }
     }
 
     override fun resolveFullSize(contentUrl: String?): String? {
+        if(contentUrl.isNullOrEmpty()){
+            return contentUrl
+        }
+
+        if(!contentUrl.isMxcUrl()){
+            return contentUrl
+        }
+
         return contentUrl
                 // do not allow non-mxc content URLs
-                ?.takeIf { it.isMxcUrl() }
+                .takeIf {
+                    it.isMxcUrl()
+                }
                 ?.let {
                     resolve(
                             contentUrl = it,
@@ -68,9 +85,19 @@ internal class DefaultContentUrlResolver @Inject constructor(
     }
 
     override fun resolveThumbnail(contentUrl: String?, width: Int, height: Int, method: ContentUrlResolver.ThumbnailMethod): String? {
+        if(contentUrl.isNullOrEmpty()){
+            return contentUrl
+        }
+
+        if(!contentUrl.isMxcUrl()){
+            return contentUrl
+        }
+
         return contentUrl
                 // do not allow non-mxc content URLs
-                ?.takeIf { it.isMxcUrl() }
+                .takeIf {
+                    it.isMxcUrl()
+                }
                 ?.let {
                     resolve(
                             contentUrl = it,

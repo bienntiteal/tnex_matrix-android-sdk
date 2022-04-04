@@ -226,8 +226,7 @@ internal interface RoomAPI {
     suspend fun getRelations(@Path("roomId") roomId: String,
                              @Path("eventId") eventId: String,
                              @Path("relationType") relationType: String,
-                             @Path("eventType") eventType: String,
-                             @Query("limit") limit: Int? = null
+                             @Path("eventType") eventType: String
     ): RelationsResponse
 
     /**

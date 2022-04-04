@@ -18,19 +18,23 @@ package org.matrix.android.sdk.internal.session.content
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
+import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.BufferedSink
 import okio.source
-import org.matrix.android.sdk.api.MatrixCoroutineDispatchers
+import org.matrix.android.sdk.api.MatrixConstants
 import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.failure.Failure
 import org.matrix.android.sdk.api.failure.MatrixError
@@ -38,14 +42,17 @@ import org.matrix.android.sdk.api.session.content.ContentUrlResolver
 import org.matrix.android.sdk.api.session.homeserver.HomeServerCapabilities
 import org.matrix.android.sdk.api.session.homeserver.HomeServerCapabilitiesService
 import org.matrix.android.sdk.internal.di.Authenticated
+import org.matrix.android.sdk.internal.legacy.riot.HomeServerConnectionConfig
 import org.matrix.android.sdk.internal.network.GlobalErrorReceiver
 import org.matrix.android.sdk.internal.network.ProgressRequestBody
 import org.matrix.android.sdk.internal.network.awaitResponse
 import org.matrix.android.sdk.internal.network.toFailure
 import org.matrix.android.sdk.internal.util.TemporaryFileCreator
+import timber.log.Timber
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.lang.reflect.Type
 import javax.inject.Inject
 
 internal class FileUploader @Inject constructor(
@@ -54,17 +61,17 @@ internal class FileUploader @Inject constructor(
         private val homeServerCapabilitiesService: HomeServerCapabilitiesService,
         private val context: Context,
         private val temporaryFileCreator: TemporaryFileCreator,
-        private val coroutineDispatchers: MatrixCoroutineDispatchers,
         contentUrlResolver: ContentUrlResolver,
         moshi: Moshi
 ) {
 
-    private val uploadUrl = contentUrlResolver.uploadUrl
+    private val uploadUrl = if(MatrixConstants.getUploadUrl().isEmpty()) contentUrlResolver.uploadUrl else MatrixConstants.getUploadUrl()
     private val responseAdapter = moshi.adapter(ContentUploadResponse::class.java)
 
     suspend fun uploadFile(file: File,
                            filename: String?,
                            mimeType: String?,
+                           key:String?,
                            progressListener: ProgressRequestBody.Listener? = null): ContentUploadResponse {
         // Check size limit
         val maxUploadFileSize = homeServerCapabilitiesService.getHomeServerCapabilities().maxUploadFileSize
@@ -96,23 +103,25 @@ internal class FileUploader @Inject constructor(
             }
         }
 
-        return upload(uploadBody, filename, progressListener)
+        return upload(uploadBody, filename, key, progressListener)
     }
 
     suspend fun uploadByteArray(byteArray: ByteArray,
                                 filename: String?,
                                 mimeType: String?,
+                                key: String?,
                                 progressListener: ProgressRequestBody.Listener? = null): ContentUploadResponse {
         val uploadBody = byteArray.toRequestBody(mimeType?.toMediaTypeOrNull())
-        return upload(uploadBody, filename, progressListener)
+        return upload(uploadBody, filename, key, progressListener)
     }
 
     suspend fun uploadFromUri(uri: Uri,
                               filename: String?,
                               mimeType: String?,
+                              key:String?,
                               progressListener: ProgressRequestBody.Listener? = null): ContentUploadResponse {
         val workingFile = context.copyUriToTempFile(uri)
-        return uploadFile(workingFile, filename, mimeType, progressListener).also {
+        return uploadFile(workingFile, filename, mimeType, key,progressListener).also {
             tryOrNull { workingFile.delete() }
         }
     }
@@ -130,34 +139,49 @@ internal class FileUploader @Inject constructor(
 
     private suspend fun upload(uploadBody: RequestBody,
                                filename: String?,
+                               key:String?,
                                progressListener: ProgressRequestBody.Listener?): ContentUploadResponse {
         val urlBuilder = uploadUrl.toHttpUrlOrNull()?.newBuilder() ?: throw RuntimeException()
 
         val httpUrl = urlBuilder
                 .apply {
                     if (filename != null) {
-                        addQueryParameter("filename", filename)
+                        addQueryParameter("key", key)
                     }
                 }
                 .build()
 
+        Timber.v("## FileUpload uploadUrl ${uploadUrl}")
+        Timber.v("## FileUpload httpUrl ${httpUrl}")
         val requestBody = if (progressListener != null) ProgressRequestBody(uploadBody, progressListener) else uploadBody
 
-        val request = Request.Builder()
-                .url(httpUrl)
-                .post(requestBody)
+        val multipartBody: MultipartBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM) // Header to show we are sending a Multipart Form Data
+                .addFormDataPart("files", filename, requestBody) // file param
+                .build()
+        val request = Request.Builder().url(httpUrl)
+                .header("M_REQUEST_TYPE", "UPLOAD_FILE")
+                .post(multipartBody)
                 .build()
 
-       return withContext(coroutineDispatchers.io) {
-             okHttpClient.newCall(request).awaitResponse().use { response ->
-                if (!response.isSuccessful) {
-                    throw response.toFailure(globalErrorReceiver)
-                } else {
-                    response.body?.source()?.let {
-                        responseAdapter.fromJson(it)
-                    }
-                            ?: throw IOException()
+        return okHttpClient.newCall(request).awaitResponse().use { response ->
+            Timber.v("## FileUpload result ${response}")
+            if (!response.isSuccessful) {
+                throw response.toFailure(globalErrorReceiver)
+            } else {
+                //Log.d("ImageResponse", response.body)
+                response.body?.source()?.let {
+                    val moshi = Moshi.Builder()
+                            .build()
+                    val type: Type = Types.newParameterizedType(MutableList::class.java, String::class.java)
+                    val jsonAdapter: JsonAdapter<List<String>> = moshi.adapter<List<String>>(type)
+                    val result: List<String>? = jsonAdapter.fromJson(it)
+
+                    Timber.v("## FileUpload result ${result}")
+                    val json = "{\"content_uri\":\""+ (result?.get(0) ?: "") +"\"}"
+                    responseAdapter.fromJson(json)
                 }
+                        ?: throw IOException()
             }
         }
     }

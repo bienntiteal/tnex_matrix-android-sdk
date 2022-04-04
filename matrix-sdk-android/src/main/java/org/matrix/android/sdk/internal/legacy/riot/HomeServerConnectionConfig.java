@@ -97,6 +97,7 @@ public class HomeServerConnectionConfig {
         return mHomeServerUri;
     }
 
+
     /**
      * @return the jitsi server uri
      */

@@ -36,5 +36,20 @@
       <option name="name" value="MavenRepo" />
       <option name="url" value="https://repo.maven.apache.org/maven2/" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="GitHubPackages" />
+      <option name="name" value="GitHubPackages" />
+      <option name="url" value="https://maven.pkg.github.com/bienntiteal/tnex-matrix-android-sdk" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="GitHubPackages" />
+      <option name="name" value="GitHubPackages" />
+      <option name="url" value="https://maven.pkg.github.com/bienntiteal/tnex_matrix-android-sdk" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven" />
+      <option name="name" value="maven" />
+      <option name="url" value="https://maven.pkg.github.com/bienntiteal" />
+    </remote-repository>
   </component>
 </project>

@@ -14,7 +14,7 @@ buildscript {
     dependencies {
         classpath libs.gradle.gradlePlugin
         classpath libs.gradle.kotlinPlugin
-        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.18.0'
+//        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.18.0'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -22,6 +22,7 @@ buildscript {
 
 allprojects {
     repositories {
+
         maven {
             url 'https://jitpack.io'
             content {
@@ -49,17 +50,7 @@ allprojects {
             }
         }
 
-        maven {
-            def propsFile = rootProject.file('github.properties')
-            def props = new Properties()
-            props.load(new FileInputStream(propsFile))
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/bienntiteal/tnex-matrix-android-sdk")
-            credentials {
-                username props['username']
-                password props['token']
-            }
-        }
+
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -76,27 +67,6 @@ allprojects {
 //        }
 //    }
 
-
-    plugins.withId("com.vanniktech.maven.publish.base") {
-        group = "org.matrix.android"
-        version = "1.4.4"
-
-        mavenPublishing {
-            def propsFile = rootProject.file('github.properties')
-            def props = new Properties()
-            props.load(new FileInputStream(propsFile))
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/bienntiteal/tnex-matrix-android-sdk")
-            credentials {
-                username props['username']
-                password props['token']
-            }
-
-            // Alternatively to the DSL based POM configuration above you can define them
-            // in Gradle properties
-            pomFromGradleProperties()
-        }
-    }
 }
 
 task clean(type: Delete) {

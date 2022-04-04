@@ -35,9 +35,6 @@ internal object HomeServerCapabilitiesMapper {
     fun map(entity: HomeServerCapabilitiesEntity): HomeServerCapabilities {
         return HomeServerCapabilities(
                 canChangePassword = entity.canChangePassword,
-                canChangeDisplayName = entity.canChangeDisplayName,
-                canChangeAvatar = entity.canChangeAvatar,
-                canChange3pid = entity.canChange3pid,
                 maxUploadFileSize = entity.maxUploadFileSize,
                 lastVersionIdentityServerSupported = entity.lastVersionIdentityServerSupported,
                 defaultIdentityServerUrl = entity.defaultIdentityServerUrl,

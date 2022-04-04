@@ -23,15 +23,15 @@ import org.matrix.android.sdk.internal.crypto.attachments.ElementToDecrypt
  */
 interface ContentUrlResolver {
 
-    enum class ThumbnailMethod(val value: String) {
-        CROP("crop"),
-        SCALE("scale")
-    }
-
     /**
      * URL to use to upload content
      */
     val uploadUrl: String
+
+    enum class ThumbnailMethod(val value: String) {
+        CROP("crop"),
+        SCALE("scale")
+    }
 
     /**
      * Get the actual URL for accessing the full-size image of a Matrix media content URI.

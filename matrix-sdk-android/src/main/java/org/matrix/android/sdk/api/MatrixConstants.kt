@@ -31,4 +31,45 @@ object MatrixConstants {
         return (ALIAS_MAX_LENGTH - 1 /* # sigil */ - 1 /* ':' */ - domain.length)
                 .coerceAtLeast(0)
     }
+
+    private var uploadUrl : String = ""
+    private var userDeviceId : String = ""
+    private var userUploadToken : String =  ""
+    private var userLocation : String = ""
+    private var userLanguage : String = ""
+
+    fun updateUploadInfo(userDeviceId : String, userUploadToken : String, userLocation : String, userLanguage : String){
+        this.userDeviceId = userDeviceId
+        this.userUploadToken = userUploadToken
+        this.userLanguage = userLanguage
+        this.userLocation = userLocation
+    }
+
+    fun updateUserUploadToken(uploadUrl : String){
+        this.uploadUrl = uploadUrl
+    }
+
+    fun setUploadUrl(uploadUrl : String){
+        this.uploadUrl = uploadUrl
+    }
+
+    fun getUploadUrl():String{
+        return uploadUrl
+    }
+
+    fun getUserDeviceId():String{
+        return userDeviceId
+    }
+
+    fun getUserUploadToken():String{
+        return userUploadToken
+    }
+
+    fun getUserLocation():String{
+        return userLocation
+    }
+
+    fun getUserLanguage():String{
+        return userLanguage
+    }
 }

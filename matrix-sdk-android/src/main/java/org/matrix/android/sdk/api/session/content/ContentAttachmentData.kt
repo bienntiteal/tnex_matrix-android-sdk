@@ -21,6 +21,7 @@ import android.os.Parcelable
 import androidx.exifinterface.media.ExifInterface
 import com.squareup.moshi.JsonClass
 import kotlinx.parcelize.Parcelize
+import org.matrix.android.sdk.api.session.room.model.message.MessageType
 import org.matrix.android.sdk.api.util.MimeTypes.normalizeMimeType
 import org.matrix.android.sdk.internal.di.MoshiProvider
 
@@ -53,6 +54,20 @@ data class ContentAttachmentData(
 
     fun toJsonString(): String {
         return MoshiProvider.providesMoshi().adapter(ContentAttachmentData::class.java).toJson(this)
+    }
+
+    fun keyUpload() : String{
+        if(type == Type.FILE){
+            return MessageType.MSGTYPE_FILE
+        }else if(type == Type.AUDIO){
+            return MessageType.MSGTYPE_AUDIO
+        }else if(type == Type.VIDEO){
+            return MessageType.MSGTYPE_VIDEO
+        }else if(type == Type.VOICE_MESSAGE){
+            return MessageType.MSGTYPE_AUDIO
+        }
+
+        return MessageType.MSGTYPE_IMAGE
     }
 
     companion object {

@@ -119,8 +119,9 @@ internal class RoomSummaryUpdater @Inject constructor(
         roomSummaryEntity.roomType = roomType
         Timber.v("## Space: Updating summary room [$roomId] roomType: [$roomType]")
 
+        // Don't use current state for this one as we are only interested in having MXCRYPTO_ALGORITHM_MEGOLM event in the room
         val encryptionEvent = CurrentStateEventEntity.getOrNull(realm, roomId, type = EventType.STATE_ROOM_ENCRYPTION, stateKey = "")?.root
-        Timber.d("## CRYPTO: currentEncryptionEvent is $encryptionEvent")
+        Timber.v("## CRYPTO: currentEncryptionEvent is $encryptionEvent")
 
         val latestPreviewableEvent = RoomSummaryEventsHelper.getLatestPreviewableEvent(realm, roomId)
 
